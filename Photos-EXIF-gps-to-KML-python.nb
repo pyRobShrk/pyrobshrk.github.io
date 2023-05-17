@@ -1,5 +1,5 @@
 # %% [markdown]
-
+\
 # Geotagged photos to KML
 \
 This tool takes a number of [geotagged](https://en.wikipedia.org/wiki/Geotagged_photograph) photos, reads the GPS data, and makes a KML file with markers for each photo. Each marker also includes a photo overlay, showing the direction the photo was taken (or north if that information is missing from the meta data). In order to get the photo overlays to show up in Google Earth, the kml needs to be saved in the same directory as the photos.
