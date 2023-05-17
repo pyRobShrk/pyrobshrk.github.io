@@ -1,16 +1,21 @@
 # %% [markdown]
-# Photos-EXIF-gps-to-KML-python
+# Geotagged photos to KML
+
+This tool takes a number of [geotagged](https://en.wikipedia.org/wiki/Geotagged_photograph) photos, reads the GPS data, and makes a KML file with markers for each photo. Each marker also includes a photo overlay, showing the direction the photo was taken (or north if that information is missing from the meta data). In order to get the photo overlays to show up in Google Earth, the kml needs to be saved in the same directory as the photos.
+
+\
+Below, first click **Choose Files** to select the images you want, and then click the button to the right to get a KML downloaded.
+
+\
+Most of the python code was adapted from Google:
 
 <https://developers.google.com/kml/articles/geotagsimple>
-# %%--- [python]
+# %%--- [html]
 # properties:
 #   run_on_load: true
+#   top_hidden: true
 # ---%%
-from js import document
-f = document.createElement('input')
-f.setAttribute('type','file')
-f.setAttribute('multiple','')
-f # Use the button below to choose your image files
+<div id="UI"></div>
 # %%--- [python]
 # properties:
 #   run_on_load: true
@@ -22,6 +27,14 @@ await micropip.install('exifread')
 import exifread
 import os
 import shutil
+from js import document
+
+f = document.createElement('input')
+f.setAttribute('type','file')
+f.setAttribute('multiple','')
+b = document.createElement('button')
+b.setAttribute('onclick', 'images2kml()')
+b.innerText = 'Create KML!'
 
 def GetFile(file_name):
   the_file = None
@@ -206,19 +219,27 @@ def CreateKmlFile(new_file_name):
 
   kml_file = open(new_file_name, 'wb')
   kml_file.write(kml_doc.toprettyxml('  ', newl='\n', encoding='utf-8'))
-# %% [javascript]
-pyodide.FS.mkdir('/images')
-for (let f of pyodide.globals.get('f').files){
-  	let data = new Uint8Array(await f.arrayBuffer());
-    pyodide.FS.writeFile('/images/'+f.name,data);
-  }
-pyodide.runPython("CreateKmlFile('images.kml')");
-pyodide.runPython("shutil.rmtree('/images')");
-const file = pyodide.FS.readFile("/images.kml", { encoding: "utf8" });
-var blob = new Blob([file], {type: 'application/octet-stream'});
-var elem = window.document.createElement('a');
-elem.href = window.URL.createObjectURL(blob);
-elem.download = 'images.kml';
-document.body.appendChild(elem);
-elem.click();        
-document.body.removeChild(elem);
+# %%--- [javascript]
+# properties:
+#   run_on_load: true
+#   collapsed: true
+# ---%%
+document.getElementById('UI').appendChild(pyodide.globals.get('f'));
+document.getElementById('UI').appendChild(pyodide.globals.get('b'));
+async function images2kml(){
+  pyodide.FS.mkdir('/images')
+  for (let f of pyodide.globals.get('f').files){
+    	let data = new Uint8Array(await f.arrayBuffer());
+      pyodide.FS.writeFile('/images/'+f.name,data);
+    }
+  pyodide.runPython("CreateKmlFile('images.kml')");
+  pyodide.runPython("shutil.rmtree('/images')");
+  const file = pyodide.FS.readFile("/images.kml", { encoding: "utf8" });
+  var blob = new Blob([file], {type: 'application/octet-stream'});
+  var elem = window.document.createElement('a');
+  elem.href = window.URL.createObjectURL(blob);
+  elem.download = 'images.kml';
+  document.body.appendChild(elem);
+  elem.click();
+  document.body.removeChild(elem);
+}
