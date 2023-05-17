@@ -1,17 +1,15 @@
-# %% [markdown]
-\
-# Geotagged photos to KML
-\
-This tool takes a number of [geotagged](https://en.wikipedia.org/wiki/Geotagged_photograph) photos, reads the GPS data, and makes a KML file with markers for each photo. Each marker also includes a photo overlay, showing the direction the photo was taken (or north if that information is missing from the meta data). In order to get the photo overlays to show up in Google Earth, the kml needs to be saved in the same directory as the photos.
-\
-Below, first click **Choose Files** to select the images you want, and then click the button to the right to get a KML downloaded.
-\
-Most of the python code was adapted [from Google](https://developers.google.com/kml/articles/geotagsimple)
 # %%--- [html]
 # properties:
 #   run_on_load: true
 #   top_hidden: true
 # ---%%
+<h1>Geotagged photos to KML</h1>
+<p>This tool takes a number of <a href="https://en.wikipedia.org/wiki/Geotagged_photograph" rel="noopener noreferrer nofollow">geotagged photos</a>
+, reads the GPS data, and makes a KML file with markers for each photo. Each marker also includes a photo overlay, showing the direction the photo
+  was taken (or north if that information is missing from the meta data). In order to get the photo overlays to show up in Google Earth, the kml needs
+  to be saved in the same directory as the photos.</p>
+<p>Below, first click <strong>Choose Files</strong> to select the images you want, and then click the button to the right to get a KML downloaded.</p>
+<p>Most of the python code was adapted <a href="https://developers.google.com/kml/articles/geotagsimple" rel="noopener noreferrer nofollow">from Google</a></p>
 <div id="UI"></div>
 # %%--- [python]
 # properties:
