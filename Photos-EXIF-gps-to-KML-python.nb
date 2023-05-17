@@ -1,0 +1,224 @@
+# %% [markdown]
+# Photos-EXIF-gps-to-KML-python
+
+<https://developers.google.com/kml/articles/geotagsimple>
+# %%--- [python]
+# properties:
+#   run_on_load: true
+# ---%%
+from js import document
+f = document.createElement('input')
+f.setAttribute('type','file')
+f.setAttribute('multiple','')
+f # Use the button below to choose your image files
+# %%--- [python]
+# properties:
+#   run_on_load: true
+#   collapsed: true
+# ---%%
+import xml.dom.minidom
+import micropip
+await micropip.install('exifread')
+import exifread
+import os
+import shutil
+
+def GetFile(file_name):
+  the_file = None
+
+  try:
+    the_file = open('/images/'+file_name, 'rb')
+    
+  except IOError:
+    the_file = None
+    
+  return the_file
+
+def GetHeaders(the_file):
+  """Handles getting the EXIF headers and returns them as a dict.
+  Args:
+    the_file: A file object
+  Returns:
+    a dict mapping keys corresponding to the EXIF headers of a file.
+  """
+
+  data = exifread.process_file(the_file, 'UNDEF', False, False, False)
+  return data
+
+def GetGps(data):
+  lat_dms = data['GPS GPSLatitude'].values
+  long_dms = data['GPS GPSLongitude'].values
+  latitude = lat_dms[0] + lat_dms[1]/60 + (lat_dms[2].num/lat_dms[2].den)/3600
+  longitude = long_dms[0] + long_dms[1]/60 + (long_dms[2].num/long_dms[2].den)/3600
+  if data['GPS GPSLatitudeRef'].printable == 'S': latitude *= -1
+  if data['GPS GPSLongitudeRef'].printable == 'W': longitude *= -1
+  altitude = None
+
+  try:
+    alt = data['GPS GPSAltitude'].values[0]
+    altitude = alt.num/alt.den
+    if data['GPS GPSAltitudeRef'] == 1: altitude *= -1
+
+  except KeyError:
+    altitude = 0
+
+  try:
+    bear = data['GPS GPSImgDirection'].values[0]
+    bearing = bear.num/bear.den
+  except:
+    bearing = 0
+  return latitude, longitude, altitude, bearing
+
+def CreateKmlDoc():
+  """Creates a KML document."""
+
+  kml_doc = xml.dom.minidom.Document()
+  kml_element = kml_doc.createElementNS('http://www.opengis.net/kml/2.2', 'kml')
+  kml_element.setAttribute('xmlns', 'http://www.opengis.net/kml/2.2')
+  kml_element.setAttribute('xmlns:gx', 'http://www.google.com/kml/ext/2.2')
+  kml_element.setAttribute('xmlns:kml', 'http://www.opengis.net/kml/2.2')
+  kml_element.setAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom')
+  kml_element = kml_doc.appendChild(kml_element)
+  document = kml_doc.createElement('Document')
+  style = kml_doc.createElement('Style')
+  style.setAttribute('id', 'camera')
+  iconstyle = kml_doc.createElement('IconStyle')
+  icon = kml_doc.createElement('Icon')
+  href = kml_doc.createElement('href')
+  href.appendChild(kml_doc.createTextNode(':/camera_mode.png'))
+  icon.appendChild(href)
+  iconstyle.appendChild(icon)
+  style.appendChild(iconstyle)
+  name = kml_doc.createElement('name')
+  name.appendChild(kml_doc.createTextNode('CDFW geotagged photos'))
+  document.appendChild(name)
+  document.appendChild(style)
+  kml_element.appendChild(document)
+  return kml_doc
+
+def CreatePhotoOverlay(kml_doc, file_name, the_file):#, file_iterator):
+  """Creates a PhotoOverlay element in the kml_doc element.
+  Args:
+    kml_doc: An XML document object.
+    file_name: The name of the file.
+    the_file: The file object.
+    file_iterator: The file iterator, used to create the id.
+  Returns:
+    An XML element representing the PhotoOverlay.
+  """
+
+  #photo_id = 'photo%s' % file_iterator
+  data = GetHeaders(the_file)
+  coords = GetGps(data)
+  po = kml_doc.createElement('PhotoOverlay')
+  #po.setAttribute('id', photo_id)
+  name = kml_doc.createElement('name')
+  name.appendChild(kml_doc.createTextNode(file_name))
+  #description = kml_doc.createElement('description')
+  #description.appendChild(kml_doc.createCDATASection('<a href="#%s">'
+  #                                                   'Click here to fly into '
+  #                                                   'photo</a>' % photo_id))
+  po.appendChild(name)
+  #po.appendChild(description)
+  icon = kml_doc.createElement('Icon')
+  href = kml_doc.createElement('href')
+  href.appendChild(kml_doc.createTextNode(file_name))
+  camera = kml_doc.createElement('Camera')
+  longitude = kml_doc.createElement('longitude')
+  latitude = kml_doc.createElement('latitude')
+  altitude = kml_doc.createElement('altitude')
+  heading = kml_doc.createElement('heading')
+  tilt = kml_doc.createElement('tilt')
+  roll = kml_doc.createElement('roll')
+  style = kml_doc.createElement('styleUrl')
+  
+  # Determines the proportions of the image and uses them to set FOV.
+  if 'EXIF ExifImageWidth' in data.keys():
+  	width = float(data['EXIF ExifImageWidth'].printable)
+  	length = float(data['EXIF ExifImageLength'].printable)
+  else:
+    width, length = 4, 3
+  lf = str(width/length * -20.0)
+  rf = str(width/length * 20.0)
+  
+  longitude.appendChild(kml_doc.createTextNode(str(coords[1])))
+  latitude.appendChild(kml_doc.createTextNode(str(coords[0])))
+  heading.appendChild(kml_doc.createTextNode(str(coords[3])))
+  altitude.appendChild(kml_doc.createTextNode(str(coords[2])))
+  tilt.appendChild(kml_doc.createTextNode('90'))
+  roll.appendChild(kml_doc.createTextNode('0'))
+  style.appendChild(kml_doc.createTextNode('camera'))
+  camera.appendChild(longitude)
+  camera.appendChild(latitude)
+  camera.appendChild(altitude)
+  camera.appendChild(heading)
+  camera.appendChild(tilt)
+  camera.appendChild(roll)
+  icon.appendChild(href)
+  viewvolume = kml_doc.createElement('ViewVolume')
+  leftfov = kml_doc.createElement('leftFov')
+  rightfov = kml_doc.createElement('rightFov')
+  bottomfov = kml_doc.createElement('bottomFov')
+  topfov = kml_doc.createElement('topFov')
+  near = kml_doc.createElement('near')
+  leftfov.appendChild(kml_doc.createTextNode(lf))
+  rightfov.appendChild(kml_doc.createTextNode(rf))
+  bottomfov.appendChild(kml_doc.createTextNode('-20'))
+  topfov.appendChild(kml_doc.createTextNode('20'))
+  near.appendChild(kml_doc.createTextNode('10'))
+  viewvolume.appendChild(leftfov)
+  viewvolume.appendChild(rightfov)
+  viewvolume.appendChild(bottomfov)
+  viewvolume.appendChild(topfov)
+  viewvolume.appendChild(near)
+  po.appendChild(camera)
+  po.appendChild(style)
+  po.appendChild(icon)
+  po.appendChild(viewvolume)
+  point = kml_doc.createElement('Point')
+  coordinates = kml_doc.createElement('coordinates')
+  coordinates.appendChild(kml_doc.createTextNode('%s,%s,%s' %(coords[1],
+                                                              coords[0],
+                                                              coords[2])))
+  point.appendChild(coordinates)
+  po.appendChild(point)
+  document = kml_doc.getElementsByTagName('Document')[0]
+  document.appendChild(po)
+
+def CreateKmlFile(new_file_name):
+  """Creates the KML Document with the PhotoOverlays, and writes it to a file.
+  Args:
+    file_names: A list object of all the names of the files.
+    new_file_name: A string of the name of the new file to be created.
+  """
+  
+  files = {}
+
+  for n in os.listdir('/images'):
+    files[n] = GetFile(n)
+    
+  kml_doc = CreateKmlDoc()
+#  file_iterator = 0
+  for key in files.keys():
+    if 'GPS GPSLatitudeRef' in GetHeaders(files[key]).keys():
+      CreatePhotoOverlay(kml_doc, key, files[key])#, file_iterator)
+#      file_iterator += 1
+
+  kml_file = open(new_file_name, 'wb')
+  kml_file.write(kml_doc.toprettyxml('  ', newl='\n', encoding='utf-8'))
+# %% [javascript]
+pyodide.FS.mkdir('/images')
+for (let f of pyodide.globals.get('f').files){
+  	let data = new Uint8Array(await f.arrayBuffer());
+    pyodide.FS.writeFile('/images/'+f.name,data);
+  }
+pyodide.runPython("CreateKmlFile('images.kml')");
+pyodide.runPython("shutil.rmtree('/images')");
+const file = pyodide.FS.readFile("/images.kml", { encoding: "utf8" });
+var blob = new Blob([file], {type: 'application/octet-stream'});
+var elem = window.document.createElement('a');
+elem.href = window.URL.createObjectURL(blob);
+elem.download = 'images.kml';
+document.body.appendChild(elem);
+elem.click();        
+document.body.removeChild(elem);
