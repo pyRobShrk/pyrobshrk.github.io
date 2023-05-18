@@ -9,7 +9,13 @@
   was taken (or north if that information is missing from the meta data). In order to get the photo overlays to show up in Google Earth, the kml needs
   to be saved in the same directory as the photos.</p>
 <p>Below, first click <strong>Choose Files</strong> to select the images you want, and then click the button to the right to get a KML downloaded.</p>
-<p>Most of the python code was adapted <a href="https://developers.google.com/kml/articles/geotagsimple" rel="noopener noreferrer nofollow">from Google</a></p>
+<p>Most of the python code was adapted <a href="https://developers.google.com/kml/articles/geotagsimple" rel="noopener noreferrer nofollow">from Google</a>.
+All of the processing happens on your computer in your web browser. Your images and locations are not shared - in theory the tool could work offline if properly cached. 
+All of the code is available on <a href="https://github.com/pyRobShrk/pyrobshrk.github.io">GitHub</a>. This project relies upon 
+<a href="https://github.com/gzuidhof/starboard-notebook">Starboard Notebook</a>, 
+<a href="https://github.com/ianare/exif-py">exifread</a>, and 
+<a href="https://github.com/pyodide/pyodide">pyodide</a>. The notebook was created and edited originally 
+<a href="https://starboard.gg/robsh/Photos-EXIF-gps-to-KML-python-np2R6Uu">at Starboard.gg</a>.</p>
 <div id="UI"></div>
 # %%--- [python]
 # properties:
