@@ -70,7 +70,7 @@ def GetGps(data):
 
   try:
     alt = data['GPS GPSAltitude'].values[0]
-    altitude = alt.num/alt.den
+    altitude = alt.num/alt.den if alt.den else alt.num
     if data['GPS GPSAltitudeRef'] == 1: altitude *= -1
 
   except KeyError:
