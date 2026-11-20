@@ -1,0 +1,6 @@
+{
+  "name": "Photos EXIF GPS to KML",
+  "short_name": "EXIF2KML",
+  "start_url": "/",
+  "display": "standalone"
+}
