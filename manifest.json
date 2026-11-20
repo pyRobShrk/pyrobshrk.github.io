@@ -3,4 +3,12 @@
   "short_name": "EXIF2KML",
   "start_url": "/",
   "display": "standalone"
+  "icons": [
+    {
+      "src": "./exif2kml.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any"
+    }
+
 }
