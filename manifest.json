@@ -2,11 +2,11 @@
   "name": "Photos EXIF GPS to KML",
   "short_name": "EXIF2KML",
   "start_url": "/",
-  "display": "standalone"
+  "display": "standalone",
   "icons": [
     {
       "src": "./exif2kml.png",
-      "sizes": "196x196",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     }]
